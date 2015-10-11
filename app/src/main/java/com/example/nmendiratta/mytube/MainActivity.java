@@ -1,10 +1,14 @@
 package com.example.nmendiratta.mytube;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -16,6 +20,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.Scopes;
@@ -24,6 +31,13 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
+
+import org.json.JSONException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * Minimal activity demonstrating basic Google Sign-In.
@@ -77,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.sign_in_button).setOnClickListener(this);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
         findViewById(R.id.disconnect_button).setOnClickListener(this);
+        findViewById(R.id.homeButton).setOnClickListener(this);
 
         // Large sign-in
         ((SignInButton) findViewById(R.id.sign_in_button)).setSize(SignInButton.SIZE_WIDE);
@@ -171,9 +186,19 @@ public class MainActivity extends AppCompatActivity implements
 
     private void showSignedInUI() {
         updateUI(true);
+        findViewById(R.id.homeButton).setVisibility(View.VISIBLE);
+        //OAuthTokenForDataApi getOAuthToken =  new OAuthTokenForDataApi();
+        //getOAuthToken.execute();
     }
 
-    private void showSignedOutUI() {
+    private void loadHomeScreen()
+    {
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
+    }
+
+
+        private void showSignedOutUI() {
         updateUI(false);
     }
 
@@ -243,6 +268,13 @@ public class MainActivity extends AppCompatActivity implements
 
         // Show the signed-in UI
         showSignedInUI();
+
+        if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
+            Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
+            Log.d( "personName " , currentPerson.getDisplayName());
+            Log.d( "personPhoto " , currentPerson.getImage().getUrl());
+           // Log.d("personGooglePlusProfile ",currentPerson.getUrl());
+        }
     }
     // [END on_connected]
 
@@ -322,6 +354,8 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.disconnect_button:
                 onDisconnectClicked();
                 break;
+            case R.id.homeButton:
+                loadHomeScreen();
         }
     }
     // [END on_click]
