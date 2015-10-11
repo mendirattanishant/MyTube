@@ -200,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements
 
         private void showSignedOutUI() {
         updateUI(false);
+            findViewById(R.id.homeButton).setVisibility(View.INVISIBLE);
     }
 
     // [START on_start_on_stop]

@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fragment"
     android:name="com.example.nmendiratta.mytube.HomeActivityFragment"
-    tools:layout="@layout/fragment_home"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <include layout="@layout/app_bar"/>
-    </fragment>
+    android:layout_height="match_parent"
+    tools:layout="@layout/fragment_home">
+</fragment>
