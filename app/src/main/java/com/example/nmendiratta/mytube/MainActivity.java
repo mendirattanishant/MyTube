@@ -1,11 +1,16 @@
 package com.example.nmendiratta.mytube;
 
 import android.Manifest;
+import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -16,6 +21,10 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.Scopes;
@@ -24,6 +33,32 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Minimal activity demonstrating basic Google Sign-In.
@@ -35,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
-
+    String userEmail;
     /* RequestCode for resolutions involving sign-in */
     private static final int RC_SIGN_IN = 1;
 
@@ -45,12 +80,13 @@ public class MainActivity extends AppCompatActivity implements
     /* Keys for persisting instance variables in savedInstanceState */
     private static final String KEY_IS_RESOLVING = "is_resolving";
     private static final String KEY_SHOULD_RESOLVE = "should_resolve";
-
+    final static int REQUEST_CODE_PICK_ACCOUNT = 1000;
     /* Client for accessing Google APIs */
     private GoogleApiClient mGoogleApiClient;
 
     /* View to display current status (signed-in, signed-out, disconnected, etc) */
     private TextView mStatus;
+    String _accesstoken;
 
     // [START resolution_variables]
     /* Is there a ConnectionResult resolution in progress? */
@@ -64,7 +100,8 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         // Restore from saved instance state
         // [START restore_saved_instance_state]
         if (savedInstanceState != null) {
@@ -95,7 +132,9 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Plus.API)
                 .addScope(new Scope(Scopes.PROFILE))
                 .addScope(new Scope(Scopes.EMAIL))
+                .addScope(new Scope(Scopes.PLUS_LOGIN))
                 .build();
+     //   makePostRequest();
         // [END create_google_api_client]
     }
 
@@ -157,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements
                             ActivityCompat.requestPermissions(MainActivity.this,
                                     new String[]{perm},
                                     RC_PERM_GET_ACCOUNTS);
+
                         }
                     }).show();
             return false;
@@ -210,6 +250,9 @@ public class MainActivity extends AppCompatActivity implements
             // If the error resolution was not successful we should not resolve further.
             if (resultCode != RESULT_OK) {
                 mShouldResolve = false;
+                userEmail = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                Log.i(TAG,"Email : "+userEmail);
+                getUserName();
             }
 
             mIsResolving = false;
@@ -235,15 +278,22 @@ public class MainActivity extends AppCompatActivity implements
     // [START on_connected]
     @Override
     public void onConnected(Bundle bundle) {
+        //Plus.PeopleApi.loadVisible(mGoogleApiClient, null).setResultCallback(this);
         // onConnected indicates that an account was selected on the device, that the selected
         // account has granted any requested permissions to our app and that we were able to
         // establish a service connection to Google Play services.
         Log.d(TAG, "onConnected:" + bundle);
         mShouldResolve = false;
+        Plus.PeopleApi.loadVisible(mGoogleApiClient, null).setResultCallback(this);
+//        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://accounts.google.com/o/oauth2/auth?scope=email%20profile&redirect_uri=" +
+//                "urn:ietf:wg:oauth:2.0:oob&response_type=code&" +
+//                "client_id=10247328491-h8ai70sdf0m838mlb8005bdeko81uciq.apps.googleusercontent.com"));
+//        new RequestTask().execute("https://accounts.google.com/o/oauth2/auth?client_id=10247328491-h8ai70sdf0m838mlb8005bdeko81uciq.apps.googleusercontent.com&+redirect_uri=http://localhost/oauth2callback&scope=https://gdata.youtube.com&response_type=code&access_type=offline");
 
         // Show the signed-in UI
         showSignedInUI();
-    }
+
+        }
     // [END on_connected]
 
     @Override
@@ -352,6 +402,7 @@ public class MainActivity extends AppCompatActivity implements
     // [END on_sign_out_clicked]
 
     // [START on_disconnect_clicked]
+
     private void onDisconnectClicked() {
         // Revoke all granted permissions and clear the default account.  The user will have
         // to pass the consent screen to sign in again.
@@ -363,5 +414,133 @@ public class MainActivity extends AppCompatActivity implements
 
         showSignedOutUI();
     }
+
+    class RequestTask extends AsyncTask<String, String, String>{
+
+        @Override
+        protected String doInBackground(String... uri) {
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpContext localContext = new BasicHttpContext();
+            HttpGet httpGet = new HttpGet("http://www.cheesejedi.com/rest_services/get_big_cheese.php?puzzle=1");
+            String text = null;
+            try {
+                HttpResponse response = httpClient.execute(httpGet, localContext);
+
+
+                HttpEntity entity = response.getEntity();
+
+
+
+
+
+            } catch (Exception e) {
+                return e.getLocalizedMessage();
+            }
+
+
+            return text;
+        }
+
+
+        
+
+
+    }
+    private  class RestClient extends AsyncTask<String,String,String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String urlString=params[0]; // URL to call
+
+            String resultToDisplay = "";
+
+            InputStream in = null;
+
+            // HTTP Get
+            try {
+
+                URL url = new URL(urlString);
+
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+                in = new BufferedInputStream(urlConnection.getInputStream());
+
+            } catch (Exception e ) {
+
+                System.out.println(e.getMessage());
+
+                return e.getMessage();
+
+            }
+
+            return resultToDisplay;
+        }
+        protected void onPostExecute(String result) {
+
+        }
+    }
+    private class RetrieveTokenTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String token = null;
+            try {
+                token = GoogleAuthUtil.getToken(getApplicationContext(),"komalkvohra@sjsu.edu" ,"https://www.googleapis.com/auth/plus.profiles.read");
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            } catch (UserRecoverableAuthException e) {
+                Log.i(TAG, "Error : " + e.toString());
+                // startActivityForResult(e.getIntent(), REQ_SIGN_IN_REQUIRED);
+            } catch (GoogleAuthException e) {
+                Log.e(TAG, e.getMessage());
+            }
+            return token;
+        }
+    }
+    private void pickUserAccount() {
+        String[] accountTypes = new String[]{"com.google"};
+
+        Intent intent = AccountPicker.newChooseAccountIntent(null, null,
+                accountTypes, true, null, null, null, null);
+        startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
+    }
+
+    public void getUserName(){
+        if(userEmail == null){
+            pickUserAccount();
+        } else {
+            _accesstoken = null;
+            new RetrieveTokenTask().execute();
+        }
+    }
+    private void makePostRequest() {
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost("https://accounts.google.com/o/oauth2/token");
+        List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
+        nameValuePair.add(new BasicNameValuePair("code", "4/7UNbQGhFalfjTbXElDvlwydubyHyttElhjxDYDZa71s"));
+        nameValuePair.add(new BasicNameValuePair("client_id", "10247328491-h8ai70sdf0m838mlb8005bdeko81uciq.apps.googleusercontent.com"));
+        nameValuePair.add(new BasicNameValuePair("redirect_uri", "urn:ietf:wg:oauth:2.0:oob"));
+        nameValuePair.add(new BasicNameValuePair("grant_type", "authorization_code"));
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePair));
+        } catch (UnsupportedEncodingException e) {
+            // log exception
+            e.printStackTrace();
+        }
+
+        //making POST request.
+        try {
+            HttpResponse response = httpClient.execute(httpPost);
+            // write response to log
+            Log.d("Http Post Response:", response.toString());
+        } catch (ClientProtocolException e) {
+            // Log exception
+            e.printStackTrace();
+        } catch (IOException e) {
+            // Log exception
+            e.printStackTrace();
+        }
+
+    }
     // [END on_disconnect_clicked]
 }
+
