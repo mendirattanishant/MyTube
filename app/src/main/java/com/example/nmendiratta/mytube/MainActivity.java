@@ -7,6 +7,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -61,7 +62,12 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
+    public static final String MY_PREFS_NAME="";
+
+
     private static final String TAG = "MainActivity";
+
+
 
     private String mEmail;
     public static final String SCOPE = "oauth2:" + Scopes.PROFILE + " " + YouTubeScopes.YOUTUBE + " " + YouTubeScopes.YOUTUBE_UPLOAD + " " + Scopes.EMAIL;
@@ -318,12 +324,17 @@ public class MainActivity extends AppCompatActivity implements
             try {
                 accessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, SCOPE);
                 //session.setToken(accessToken);
-                Log.d("OAuth token", accessToken.toString());
+                Log.d("OAuth token", accessToken);
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 1); // 0 - for private mode
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("oauth_token", accessToken);
+                editor.commit();
             } catch (UserRecoverableAuthException e) {
                 startActivityForResult(e.getIntent(), REQ_SIGN_IN_REQUIRED);
             } catch (Exception e) {
                 // Log.e(Constatnts.TAG,"Exception in getting token", e);
             }
+
             return accessToken;
         }
 
@@ -331,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnectionSuspended(int i) {
-        // The connection to Google Play services was lost. The GoogleApiClient will automatically
+        // The connection to Google Play services was lost. The G   oogleApiClient will automatically
         // attempt to re-connect. Any UI elements that depend on connection to Google APIs should
         // be hidden or disabled until onConnected is called again.z
         Log.w(TAG, "onConnectionSuspended:" + i);
