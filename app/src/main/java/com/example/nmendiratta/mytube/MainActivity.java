@@ -1,13 +1,15 @@
 package com.example.nmendiratta.mytube;
 
 import android.Manifest;
-import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,25 +19,36 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
+import com.google.api.services.youtube.YouTubeScopes;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -49,6 +62,11 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
+
+    private String mEmail;
+    public static final String SCOPE = "oauth2:" + Scopes.PROFILE + " " + YouTubeScopes.YOUTUBE + " " + YouTubeScopes.YOUTUBE_UPLOAD + " " + Scopes.EMAIL;
+    static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1001;
+    private static final int REQ_SIGN_IN_REQUIRED = 55664;
 
     /* RequestCode for resolutions involving sign-in */
     private static final int RC_SIGN_IN = 1;
@@ -151,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * Check if we have the GET_ACCOUNTS permission and request it if we do not.
+     *
      * @return true if we have the permission, false if we do not.
      */
     private boolean checkAccountsPermission() {
@@ -189,18 +208,19 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.homeButton).setVisibility(View.VISIBLE);
         //OAuthTokenForDataApi getOAuthToken =  new OAuthTokenForDataApi();
         //getOAuthToken.execute();
+
     }
 
-    private void loadHomeScreen()
-    {
+
+    private void loadHomeScreen() {
         Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
     }
 
 
-        private void showSignedOutUI() {
+    private void showSignedOutUI() {
         updateUI(false);
-            findViewById(R.id.homeButton).setVisibility(View.INVISIBLE);
+        findViewById(R.id.homeButton).setVisibility(View.INVISIBLE);
     }
 
     // [START on_start_on_stop]
@@ -241,6 +261,10 @@ public class MainActivity extends AppCompatActivity implements
             mIsResolving = false;
             mGoogleApiClient.connect();
         }
+        if (requestCode == REQ_SIGN_IN_REQUIRED && resultCode == RESULT_OK) {
+            // We had to sign in - now we can finish off the token request.
+            new GetAccessToken().execute();
+        }
     }
     // [END on_activity_result]
 
@@ -272,18 +296,44 @@ public class MainActivity extends AppCompatActivity implements
 
         if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
             Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
-            Log.d( "personName " , currentPerson.getDisplayName());
-            Log.d( "personPhoto " , currentPerson.getImage().getUrl());
-           // Log.d("personGooglePlusProfile ",currentPerson.getUrl());
+            Log.d("personName ", currentPerson.getDisplayName());
+            Log.d("personPhoto ", currentPerson.getImage().getUrl());
+            Log.d("personEmail", Plus.AccountApi.getAccountName(mGoogleApiClient));
+            mEmail = Plus.AccountApi.getAccountName(mGoogleApiClient);
+            //new GetUsernameTask(MainActivity.this, mEmail, SCOPE).execute();
+            new GetAccessToken().execute();
+
+            // Log.d("personGooglePlusProfile ",currentPerson.getUrl());
         }
+
+        // [END on_connected]
     }
-    // [END on_connected]
+
+
+    private class GetAccessToken extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String accessToken = null;
+            try {
+                accessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, SCOPE);
+                //session.setToken(accessToken);
+                Log.d("OAuth token", accessToken.toString());
+            } catch (UserRecoverableAuthException e) {
+                startActivityForResult(e.getIntent(), REQ_SIGN_IN_REQUIRED);
+            } catch (Exception e) {
+                // Log.e(Constatnts.TAG,"Exception in getting token", e);
+            }
+            return accessToken;
+        }
+
+    }
 
     @Override
     public void onConnectionSuspended(int i) {
         // The connection to Google Play services was lost. The GoogleApiClient will automatically
         // attempt to re-connect. Any UI elements that depend on connection to Google APIs should
-        // be hidden or disabled until onConnected is called again.
+        // be hidden or disabled until onConnected is called again.z
         Log.w(TAG, "onConnectionSuspended:" + i);
     }
 
