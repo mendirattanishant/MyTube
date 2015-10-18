@@ -18,14 +18,17 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.ChannelListResponse;
+import com.google.api.services.youtube.model.Playlist;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.PlaylistListResponse;
 import com.google.api.services.youtube.model.ResourceId;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -47,6 +50,7 @@ public class HomeActivityFragment extends Fragment{
     private class GetAccessToken extends AsyncTask<String, Void, String> {
 
         private YouTube youtube;
+        public String uploadPlaylistId;
 
         @Override
         protected String doInBackground(String... params) {
@@ -62,27 +66,32 @@ public class HomeActivityFragment extends Fragment{
                 youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName(
                         "MyTube").build();
 
-                // Call the API's channels.list method to retrieve the
-                // resource that represents the authenticated user's channel.
-                // In the API response, only include channel information needed for
-                // this use case. The channel's contentDetails part contains
-                // playlist IDs relevant to the channel, including the ID for the
-                // list that contains videos uploaded to the channel.
-                YouTube.Channels.List channelRequest = youtube.channels().list("contentDetails");
-                channelRequest.setMine(true);
-                channelRequest.setFields("items/contentDetails,nextPageToken,pageInfo");
-                ChannelListResponse channelResult = channelRequest.execute();
 
-                List<Channel> channelsList = channelResult.getItems();
+                // list that contains playlists of current user.
+              //  String uploadPlaylistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
 
-                String uploadPlaylistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
+                YouTube.Playlists.List p1 = youtube.playlists().list("snippet").setMine(true);
+                Log.d("Playlist List", p1.execute().getItems().toString());
+                PlaylistListResponse p = p1.execute();
 
+                // Retrieve the playlist ID of of SSJU-CMPE-277
+                for (Playlist item:p.getItems()
+                     ) {
+                    if (item.getSnippet().getTitle().equalsIgnoreCase("SSJU-CMPE-277")){
+                        uploadPlaylistId = item.getId().toString();
+                        break;
+                    }
+                    Log.d("uploadPlayListid1",uploadPlaylistId);
+                }
+                Log.d("uploadPlayListid",uploadPlaylistId);
+
+                //get playlist items
                 List<PlaylistItem> playlistItemList = new ArrayList<PlaylistItem>();
 
-                // Retrieve the playlist of the channel's uploaded videos.
                 YouTube.PlaylistItems.List playlistItemRequest =
                         youtube.playlistItems().list("id,contentDetails,snippet");
                 playlistItemRequest.setPlaylistId(uploadPlaylistId);
+
 
                 // Only retrieve data used in this application, thereby making
                 // the application more efficient. See:

@@ -15,8 +15,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.Playlist;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.PlaylistListResponse;
 import com.google.api.services.youtube.model.ResourceId;
 
 import java.util.ArrayList;
@@ -75,6 +77,7 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
     private class InsertVideoInPlaylist extends AsyncTask<String, Void, String> {
 
         private YouTube youtube;
+        private String playlistId;
 
         @Override
         protected String doInBackground(String... params) {
@@ -93,9 +96,22 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
                         "MyTube").build();
 
 
-                String playlistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
 
-                Log.d("two","two");
+                // list that contains playlists of current user.
+                //  String uploadPlaylistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
+
+                YouTube.Playlists.List p1 = youtube.playlists().list("snippet").setMine(true);
+                Log.d("Playlist List", p1.execute().getItems().toString());
+                PlaylistListResponse p = p1.execute();
+
+                // Retrieve the playlist ID of of SSJU-CMPE-277
+                for (Playlist item:p.getItems()
+                        ) {
+                    if (item.getSnippet().getTitle().equalsIgnoreCase("SSJU-CMPE-277")){
+                        playlistId = item.getId().toString();
+                        break;
+                    }
+                }
 
                 //inserting into playlist
 
@@ -103,7 +119,7 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
                 // playlist.
                 ResourceId resourceId = new ResourceId();
                 resourceId.setKind("youtube#video");
-                resourceId.setVideoId("IHMyjorUOdE");
+                resourceId.setVideoId("8Cn1pYnAZSE");
 
                 // Set fields included in the playlistItem resource's "snippet" part.
                 PlaylistItemSnippet playlistItemSnippet = new PlaylistItemSnippet();
