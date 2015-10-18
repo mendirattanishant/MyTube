@@ -4,7 +4,9 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+
 import com.google.api.services.youtube.model.Channel;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,29 +58,17 @@ public class HomeActivityFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... params) {
-            HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-            JsonFactory JSON_FACTORY = new JacksonFactory();
 
-           /* GoogleCredential credential = new GoogleCredential.Builder()
-                    .setTransport(HTTP_TRANSPORT)
-                    .setJsonFactory(JSON_FACTORY)
-                    .setServiceAccountId("...gserviceaccount.com")
-                    .setServiceAccountScopes("https://www.googleapis.com/auth/androidpublisher")
-                    .setServiceAccountPrivateKeyFromP12File(keyFile)*/
-
-            //  SharedPreferences prefs = getContext().getSharedPreferences(MY_PREFS_NAME,getContext().MODE_PRIVATE);
             SharedPreferences pref = getActivity().getApplicationContext().getSharedPreferences("MyPref", 1); // 0 - for private mode
             oauth_token = pref.getString("oauth_token", "");
-            Log.d("oauth_token from Fragment", oauth_token.toString());
+            Log.d("oauth_token from Fragments", oauth_token);
             try {
-                Log.d("IN TRY", "Nishant1");
                 // Authorize the request.
                 GoogleCredential credential = new GoogleCredential().setAccessToken(oauth_token);
 
                 // This object is used to make YouTube Data API requests.
                 youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName(
                         "MyTube").build();
-                Log.d("IN TRY", "Nishant2");
 
                 // Call the API's channels.list method to retrieve the
                 // resource that represents the authenticated user's channel.
@@ -93,7 +83,6 @@ public class HomeActivityFragment extends Fragment {
 
                 List<Channel> channelsList = channelResult.getItems();
 
-                Log.d("IN TRY", "Nishant3");
                 String uploadPlaylistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
 
                 List<PlaylistItem> playlistItemList = new ArrayList<PlaylistItem>();
@@ -110,10 +99,8 @@ public class HomeActivityFragment extends Fragment {
                         "items(contentDetails/videoId,snippet/title,snippet/publishedAt),nextPageToken,pageInfo");
 
                 String nextToken = "";
-                Log.d("IN TRY", "Nishant4");
 
                 do {
-                    Log.d("IN DO", "Nishant1");
                     playlistItemRequest.setPageToken(nextToken);
                     PlaylistItemListResponse playlistItemResult = playlistItemRequest.execute();
 
@@ -126,16 +113,14 @@ public class HomeActivityFragment extends Fragment {
                 prettyPrint(playlistItemList.size(), playlistItemList.iterator());
 
 
-
-
                 return null;
             } catch (Exception e) {
-                Log.d("EXCEPTION", "AAP KA KYA HOGA JANABEAALI");
+            } finally {
 
             }
-            Log.d("EXCEPTION", "AAP KA KYA HOGA JANABEAALI!!!!!!!");
             return null;
         }
+
         private void prettyPrint(int size, Iterator<PlaylistItem> playlistEntries) {
             Log.d("TAG", "=============================================================");
             Log.d("TAG", "\t\tTotal Videos Uploaded: " + size);
