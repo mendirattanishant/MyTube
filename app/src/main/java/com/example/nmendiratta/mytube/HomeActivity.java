@@ -1,18 +1,42 @@
 package com.example.nmendiratta.mytube;
 
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
-public class HomeActivity extends AppCompatActivity {
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.PlaylistItem;
+import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.ResourceId;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class HomeActivity extends AppCompatActivity  implements View.OnClickListener {
+
+    public String oauth_token;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        init();
     }
 
+    protected void init()
+    {
+        Button insertButton = (Button)findViewById(R.id.insertButton);
+        insertButton.setOnClickListener(this);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -34,5 +58,88 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId())
+        {
+            case R.id.insertButton:
+                new InsertVideoInPlaylist().execute();
+                break;
+
+        }
+    }
+
+    //insert in playlist
+    private class InsertVideoInPlaylist extends AsyncTask<String, Void, String> {
+
+        private YouTube youtube;
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 1); // 0 - for private mode
+            oauth_token = pref.getString("oauth_token", "");
+            Log.d("inserting in playlist", oauth_token);
+            try {
+
+                Log.d("one","one");
+                // Authorize the request.
+                GoogleCredential credential = new GoogleCredential().setAccessToken(oauth_token);
+
+                // This object is used to make YouTube Data API requests.
+                youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName(
+                        "MyTube").build();
+
+
+                String playlistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
+
+                Log.d("two","two");
+
+                //inserting into playlist
+
+                // Define a resourceId that identifies the video being added to the
+                // playlist.
+                ResourceId resourceId = new ResourceId();
+                resourceId.setKind("youtube#video");
+                resourceId.setVideoId("IHMyjorUOdE");
+
+                // Set fields included in the playlistItem resource's "snippet" part.
+                PlaylistItemSnippet playlistItemSnippet = new PlaylistItemSnippet();
+                playlistItemSnippet.setTitle("First video in the test playlist");
+                playlistItemSnippet.setPlaylistId(playlistId);
+                playlistItemSnippet.setResourceId(resourceId);
+
+                Log.d("three", "three");
+                // Create the playlistItem resource and set its snippet to the
+                // object created above.
+                PlaylistItem playlistItem = new PlaylistItem();
+                playlistItem.setSnippet(playlistItemSnippet);
+
+                // Call the API to add the playlist item to the specified playlist.
+                // In the API call, the first argument identifies the resource parts
+                // that the API response should contain, and the second argument is
+                // the playlist item being inserted.
+                YouTube.PlaylistItems.Insert playlistItemsInsertCommand =
+                        youtube.playlistItems().insert("snippet,contentDetails", playlistItem);
+                PlaylistItem returnedPlaylistItem = playlistItemsInsertCommand.execute();
+
+                Log.d("four","four");
+                // Print data from the API response and return the new playlist
+                // item's unique playlistItem ID.
+
+                Log.d("video inserted in playlist", "New PlaylistItem name: " + returnedPlaylistItem.getSnippet().getTitle());
+                Log.d("video inserted in playlist", " - Video id: " + returnedPlaylistItem.getSnippet().getResourceId().getVideoId());
+                Log.d("video inserted in playlist", " - Posted: " + returnedPlaylistItem.getSnippet().getPublishedAt());
+                Log.d("video inserted in playlist", " - Channel: " + returnedPlaylistItem.getSnippet().getChannelId());
+                return null;
+            } catch (Exception e) {
+            } finally {
+
+            }
+            return null;
+        }
+
     }
 }

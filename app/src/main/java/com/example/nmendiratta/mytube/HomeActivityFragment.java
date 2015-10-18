@@ -11,25 +11,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.content.SharedPreferences;
+import android.widget.Button;
 
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.common.Scopes;
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.Lists;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
 import com.google.api.services.youtube.model.ChannelListResponse;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
+import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.ResourceId;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,7 +30,7 @@ import java.util.List;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class HomeActivityFragment extends Fragment {
+public class HomeActivityFragment extends Fragment{
     public static final String MY_PREFS_NAME = "";
     private static final String TAG = "HomeActivity";
     public String oauth_token;
@@ -135,4 +127,9 @@ public class HomeActivityFragment extends Fragment {
             }
         }
     }
+
+
+
+
+
 }
