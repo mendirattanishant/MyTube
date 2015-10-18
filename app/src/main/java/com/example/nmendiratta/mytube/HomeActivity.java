@@ -38,6 +38,9 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
     {
         Button insertButton = (Button)findViewById(R.id.insertButton);
         insertButton.setOnClickListener(this);
+
+        Button deleteButton = (Button)findViewById(R.id.deleteButton);
+        deleteButton.setOnClickListener(this);
     }
 
     @Override
@@ -68,6 +71,9 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
         {
             case R.id.insertButton:
                 new InsertVideoInPlaylist().execute();
+                break;
+            case R.id.deleteButton:
+                new DeleteVideoFromPlaylist().execute();
                 break;
 
         }
@@ -149,6 +155,64 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
                 Log.d("video inserted in playlist", " - Video id: " + returnedPlaylistItem.getSnippet().getResourceId().getVideoId());
                 Log.d("video inserted in playlist", " - Posted: " + returnedPlaylistItem.getSnippet().getPublishedAt());
                 Log.d("video inserted in playlist", " - Channel: " + returnedPlaylistItem.getSnippet().getChannelId());
+                return null;
+            } catch (Exception e) {
+            } finally {
+
+            }
+            return null;
+        }
+
+    }
+
+
+    //insert in playlist
+    private class DeleteVideoFromPlaylist extends AsyncTask<String, Void, String> {
+
+        private YouTube youtube;
+        private String playlistId;
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 1); // 0 - for private mode
+            oauth_token = pref.getString("oauth_token", "");
+            Log.d("Deleting in playlist", oauth_token);
+            try {
+
+               // Authorize the request.
+                GoogleCredential credential = new GoogleCredential().setAccessToken(oauth_token);
+
+                // This object is used to make YouTube Data API requests.
+                youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName(
+                        "MyTube").build();
+
+
+
+                // list that contains playlists of current user.
+                //  String uploadPlaylistId = "PL8_B7e8MFom3V9ktKZ9JaNppL2-Y6gjt0";
+
+                YouTube.Playlists.List p1 = youtube.playlists().list("snippet").setMine(true);
+                Log.d("Playlist List", p1.execute().getItems().toString());
+                PlaylistListResponse p = p1.execute();
+
+                // Retrieve the playlist ID of of SSJU-CMPE-277
+                for (Playlist item:p.getItems()
+                        ) {
+                    if (item.getSnippet().getTitle().equalsIgnoreCase("SSJU-CMPE-277")){
+                        playlistId = item.getId().toString();
+                        break;
+                    }
+                }
+//                YouTube.Playlists.List p_delete_list = youtube.playlists().list("snippet").setMine(true);
+//                Log.d("Playlist List", p_delete_list.execute().getItems().toString());
+
+
+              //  YouTube.PlaylistItems.Delete playlistItemsDeleteCommand =
+                //        youtube.playlistItems().delete("8Cn1pYnAZSE");
+              // playlistItemsDeleteCommand.execute();
+
+                Log.d("playlist item deleted","four");
                 return null;
             } catch (Exception e) {
             } finally {
