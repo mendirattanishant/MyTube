@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.sign_in_button).setOnClickListener(this);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
         findViewById(R.id.disconnect_button).setOnClickListener(this);
-        findViewById(R.id.homeButton).setOnClickListener(this);
 
         // Large sign-in
         ((SignInButton) findViewById(R.id.sign_in_button)).setSize(SignInButton.SIZE_WIDE);
@@ -211,7 +210,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private void showSignedInUI() {
         updateUI(true);
-        findViewById(R.id.homeButton).setVisibility(View.VISIBLE);
         //OAuthTokenForDataApi getOAuthToken =  new OAuthTokenForDataApi();
         //getOAuthToken.execute();
 
@@ -219,14 +217,14 @@ public class MainActivity extends AppCompatActivity implements
 
 
     private void loadHomeScreen() {
-        Intent intent = new Intent(this, HomeActivity.class);
+       // Intent intent = new Intent(this, HomeActivity.class);
+        Intent intent = new Intent(this, TabActivity.class);
         startActivity(intent);
     }
 
 
     private void showSignedOutUI() {
         updateUI(false);
-        findViewById(R.id.homeButton).setVisibility(View.INVISIBLE);
     }
 
     // [START on_start_on_stop]
@@ -304,14 +302,14 @@ public class MainActivity extends AppCompatActivity implements
             Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
             Log.d("personName ", currentPerson.getDisplayName());
             Log.d("personPhoto ", currentPerson.getImage().getUrl());
-            Log.d("personEmail", Plus.AccountApi.getAccountName(mGoogleApiClient));
+//            Log.d("personEmail", Plus.AccountApi.getAccountName(mGoogleApiClient));
             mEmail = Plus.AccountApi.getAccountName(mGoogleApiClient);
             //new GetUsernameTask(MainActivity.this, mEmail, SCOPE).execute();
             new GetAccessToken().execute();
 
             // Log.d("personGooglePlusProfile ",currentPerson.getUrl());
         }
-
+        loadHomeScreen();
         // [END on_connected]
     }
 
@@ -416,8 +414,8 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.disconnect_button:
                 onDisconnectClicked();
                 break;
-            case R.id.homeButton:
-                loadHomeScreen();
+
+
         }
     }
     // [END on_click]
@@ -435,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements
     // [END on_sign_in_clicked]
 
     // [START on_sign_out_clicked]
-    private void onSignOutClicked() {
+    public void onSignOutClicked() {
         // Clear the default account so that GoogleApiClient will not automatically
         // connect in the future.
         if (mGoogleApiClient.isConnected()) {

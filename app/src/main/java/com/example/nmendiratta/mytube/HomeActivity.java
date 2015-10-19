@@ -127,6 +127,7 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
                 resourceId.setKind("youtube#video");
                 resourceId.setVideoId("8Cn1pYnAZSE");
 
+
                 // Set fields included in the playlistItem resource's "snippet" part.
                 PlaylistItemSnippet playlistItemSnippet = new PlaylistItemSnippet();
                 playlistItemSnippet.setTitle("First video in the test playlist");
@@ -134,27 +135,18 @@ public class HomeActivity extends AppCompatActivity  implements View.OnClickList
                 playlistItemSnippet.setResourceId(resourceId);
 
                 Log.d("three", "three");
-                // Create the playlistItem resource and set its snippet to the
-                // object created above.
+
+
                 PlaylistItem playlistItem = new PlaylistItem();
                 playlistItem.setSnippet(playlistItemSnippet);
 
-                // Call the API to add the playlist item to the specified playlist.
-                // In the API call, the first argument identifies the resource parts
-                // that the API response should contain, and the second argument is
-                // the playlist item being inserted.
                 YouTube.PlaylistItems.Insert playlistItemsInsertCommand =
                         youtube.playlistItems().insert("snippet,contentDetails", playlistItem);
                 PlaylistItem returnedPlaylistItem = playlistItemsInsertCommand.execute();
 
                 Log.d("four","four");
                 // Print data from the API response and return the new playlist
-                // item's unique playlistItem ID.
 
-                Log.d("video inserted in playlist", "New PlaylistItem name: " + returnedPlaylistItem.getSnippet().getTitle());
-                Log.d("video inserted in playlist", " - Video id: " + returnedPlaylistItem.getSnippet().getResourceId().getVideoId());
-                Log.d("video inserted in playlist", " - Posted: " + returnedPlaylistItem.getSnippet().getPublishedAt());
-                Log.d("video inserted in playlist", " - Channel: " + returnedPlaylistItem.getSnippet().getChannelId());
                 return null;
             } catch (Exception e) {
             } finally {

@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">Sign-In Quickstart</string>
+
+    <string name="app_name">MyTube</string>
     <string name="title_text">MyTube Sign In</string>
 
     <!-- Sign-in status messages -->
@@ -25,7 +26,15 @@
 
     <!-- Rationale for asking for Contacts -->
     <string name="contacts_permission_rationale">Contacts access is needed in order to retrieve your email address.</string>
-    <string name="title_activity_home">HomeActivity</string>
+
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="logout">LOGOUT</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="search">Search</string>
+    <string name="failed">Failed to initialize Youtube Player</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="search_fragment">Hello search fragment</string>
+    <string name="favorite_fragment">Hello favorite fragment</string>
 </resources>

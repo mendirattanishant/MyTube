@@ -1,22 +1,50 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+     Base application theme.
+    <!--<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">-->
+        <!--<item name="android:actionBarStyle">@style/MyActionBar</item>-->
+        <!--<item name="icon">@mipmap/ic_launcher</item>-->
+    <!--</style>-->
+
+    <style name="myTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:actionMenuTextColor">@android:color/holo_blue_light</item>
     </style>
 
-    <!-- Activity with no Title -->
-    <style name="ThemeOverlay.MyNoTitleActivity" parent="AppTheme">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <style name="myTheme.ActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:titleTextStyle">@style/myTheme.ActionBar.Text</item>
+    </style>
+
+    <style name="myTheme.ActionBar.Text" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:textColor">@android:color/holo_blue_light</item>
+    </style>
+
+    <!--<style name="MyActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid.Inverse">-->
+        <!--<item name="android:background">#cd201f</item>-->
+        <!--<item name="background">#cd201f</item>-->
+        <!-- -->
+        // change to blue color
+    <!--</style>-->
+
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="actionBarStyle">@style/ActionBar</item>
+        <item name="actionBarTabStyle">@style/ActionBar.Tab</item>
+    </style>
+
+    <style name="ActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">#cd201f</item>
+        <item name="background">@color/red</item>
+    </style>
+
+    <style name="ActionBar.Tab">
+        <item name="android:background">@color/lightred</item>
+        <item name="android:gravity">center</item>
+        <item name="background">@color/lightred</item>
     </style>
 
     <!-- Dark Buttons -->
     <style name="ThemeOverlay.MyDarkButton" parent="ThemeOverlay.AppCompat.Dark">
-       <item name="colorButtonNormal">@color/blue_grey_500</item>
+        <item name="colorButtonNormal">@color/blue_grey_500</item>
     </style>
-
-
-
-
 </resources>
